@@ -22,7 +22,7 @@ class LoginScreenState extends State<LoginScreen> {
           // ✅ Center the image properly
           Center(
             child: Image.asset(
-              'assets/cimages/icon.png', // ✅ remove extra space after .png
+              'assets/images/icon.png', // ✅ remove extra space after .png
               width: 150, // optional size
               height: 150,
               fit: BoxFit.contain,
