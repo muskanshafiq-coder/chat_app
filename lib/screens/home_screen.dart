@@ -15,13 +15,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         leading: const Icon(CupertinoIcons.home),
         centerTitle: true,
-        elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        shape: const Border(
+          bottom: BorderSide(
+            color: Colors.grey, // line color
+            width: 1, // line thickness
+          ),
+        ),
+
+
         title: const Text(
           'We Chat',
           style: TextStyle(color: Colors.black),
         ),
-        backgroundColor: Colors.white,
         actions: [
           IconButton(
             onPressed: () {},

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_screen.dart'; // ✅ import this
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,16 +48,19 @@ class LoginScreenState extends State<LoginScreen> {
                   elevation: 3,
                   shape: const StadiumBorder(),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 10),
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                 ),
                 onPressed: () {
-                  // 👉 You can later connect Google Sign-In here
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Sign in with Google pressed')),
+                  // 👉 navigate to home screen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
                   );
                 },
                 icon: Image.asset(
-                  'assets/images/google.png', // add this image in your assets
+                  'assets/images/google.png',
                   height: 28,
                 ),
                 label: const Text(
