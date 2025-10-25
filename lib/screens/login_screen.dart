@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:chat_app/api/apis.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -15,7 +15,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-
 
   @override
   void initState() {
@@ -37,37 +36,50 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ✅ Sign in with Google
-  Future<void> signInWithGoogle() async {
+  Future<UserCredential?> signInWithGoogle() async {
     try {
+      // Check internet connection
       await InternetAddress.lookup('google.com');
+
       // Trigger the Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return; // User cancelled the sign-in
+      if (googleUser == null) return null; // User cancelled
 
       // Obtain the auth details
       final GoogleSignInAuthentication googleAuth =
       await googleUser.authentication;
 
-      // Create a credential for Firebase
+      // Create Firebase credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase with the Google credential
-      await _auth.signInWithCredential(credential);
+      // Sign in to Firebase
+      final userCredential = await _auth.signInWithCredential(credential);
 
-      // ✅ Navigate to Home Screen after successful login
+      // Save to your APIs class (if needed)
+      await APIs.auth.signInWithCredential(credential);
+
+      // Navigate to home screen after login
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
       }
+
+      return userCredential;
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No internet connection")),
+      );
+      return null;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Google Sign-In failed: $e")),
       );
+      return null;
     }
   }
 
@@ -103,8 +115,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   backgroundColor: Colors.white,
                   elevation: 3,
                   shape: const StadiumBorder(),
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                 ),
                 onPressed: signInWithGoogle,
                 icon: Image.asset('assets/images/google.png', height: 28),
