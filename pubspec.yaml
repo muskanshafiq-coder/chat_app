@@ -18,12 +18,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  cupertino_icons: ^1.0.8
-  firebase_core: ^3.15.2
-  firebase_auth: ^5.7.0
+  firebase_core: ^4.2.0
+  firebase_auth: ^6.1.1
   google_sign_in: ^6.3.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
