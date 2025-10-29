@@ -1,41 +1,51 @@
 class ChatUser {
-  final String email;
   final String image;
-  final bool isOnline;
-  final String lastActive;
+  final String about;
   final String name;
+  final String createdAt;
+  final bool isOnline;
+  final String id;
+  final String lastActive;
   final String pushToken;
+  final String email;
 
   ChatUser({
-    required this.email,
     required this.image,
-    required this.isOnline,
-    required this.lastActive,
+    required this.about,
     required this.name,
+    required this.createdAt,
+    required this.isOnline,
+    required this.id,
+    required this.lastActive,
     required this.pushToken,
+    required this.email,
   });
 
-  // Convert Firestore JSON → Dart object
   factory ChatUser.fromJson(Map<String, dynamic> json) {
     return ChatUser(
-      email: json['email'] ?? '',
       image: json['image'] ?? '',
-      isOnline: json['is_online'] == true || json['is_online'] == 'true',
-      lastActive: json['last_active'] ?? '',
+      about: json['about'] ?? '',
       name: json['name'] ?? '',
+      createdAt: json['created_at'] ?? '',
+      isOnline: json['is_online'] ?? false,
+      id: json['id'] ?? '',
+      lastActive: json['last_active'] ?? '',
       pushToken: json['push_token'] ?? '',
+      email: json['email'] ?? '',
     );
   }
 
-  // Convert Dart object → Firestore JSON
   Map<String, dynamic> toJson() {
     return {
-      'email': email,
       'image': image,
-      'is_online': isOnline,
-      'last_active': lastActive,
+      'about': about,
       'name': name,
+      'created_at': createdAt,
+      'is_online': isOnline,
+      'id': id,
+      'last_active': lastActive,
       'push_token': pushToken,
+      'email': email,
     };
   }
 }
