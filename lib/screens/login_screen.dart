@@ -16,21 +16,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
   }
 
-  // ✅ If already signed in, go directly to home
   void _checkLoginStatus() {
     final user = _auth.currentUser;
     if (user != null) {
-      Future.microtask(() {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+      Future.microtask(() async {
+        if (await APIs.userExists()) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        } else {
+          await APIs.creatUser();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
       });
     }
   }
@@ -38,35 +48,24 @@ class _LoginScreenState extends State<LoginScreen> {
   // ✅ Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Check internet connection
       await InternetAddress.lookup('google.com');
 
-      // Trigger the Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // User cancelled
+      if (googleUser == null) return null;
 
-      // Obtain the auth details
       final GoogleSignInAuthentication googleAuth =
       await googleUser.authentication;
 
-      // Create Firebase credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase
       final userCredential = await _auth.signInWithCredential(credential);
 
-      // Save to your APIs class (if needed)
-      await APIs.auth.signInWithCredential(credential);
-
-      // Navigate to home screen after login
+      // 🟢 After Google sign-in success → show email/password input
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+        _showEmailPasswordDialog();
       }
 
       return userCredential;
@@ -83,6 +82,87 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // ✅ Bottom sheet to ask for email/password
+  void _showEmailPasswordDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 25,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Complete Your Profile",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
+              ),
+              const SizedBox(height: 25),
+              ElevatedButton(
+                onPressed: _onContinuePressed,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 45),
+                  backgroundColor: Colors.blueAccent,
+                ),
+                child: const Text("Continue"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ✅ Save info and go to home
+  Future<void> _onContinuePressed() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
+    Navigator.pop(context); // close bottom sheet
+
+    // Save to Firestore
+    await APIs.creatUser();
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final Size mq = MediaQuery.of(context).size;
@@ -92,11 +172,12 @@ class _LoginScreenState extends State<LoginScreen> {
         title: const Text('Welcome to We Chat'),
         centerTitle: true,
         elevation: 0,
-        shape: const Border(bottom: BorderSide(color: Colors.grey, width: 2)),
+        shape: const Border(
+          bottom: BorderSide(color: Colors.grey, width: 2),
+        ),
       ),
       body: Stack(
         children: [
-          // ✅ Center app icon
           Center(
             child: Image.asset(
               'assets/images/icon.png',
@@ -104,8 +185,6 @@ class _LoginScreenState extends State<LoginScreen> {
               fit: BoxFit.contain,
             ),
           ),
-
-          // ✅ Bottom Google Sign-In button
           Positioned(
             bottom: mq.height * 0.08,
             width: mq.width,
