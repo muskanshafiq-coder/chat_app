@@ -31,7 +31,7 @@ class APIs {
         id: user.uid,
         name: user.displayName ?? '',
         email: user.email ?? '',
-        about: "Hey, I'm using We Chat!",
+        about: 'Feeling Happy',
         image: user.photoURL ?? '',
         createdAt: DateTime
             .now()
