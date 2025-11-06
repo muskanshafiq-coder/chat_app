@@ -49,14 +49,6 @@ class _HomeScreenState extends State<ProfileScreen > {
               await GoogleSignIn().signOut().then((value) {
                 Navigator.pop(context);
                 Navigator.pop(context);
-
-
-
-
-
-
-
-                
                 Navigator.pushReplacement(
                     context, MaterialPageRoute(builder: (_) => LoginScreen()));
               });

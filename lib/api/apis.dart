@@ -5,14 +5,29 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class APIs {
   static FirebaseAuth auth = FirebaseAuth.instance;
   static FirebaseFirestore firestore = FirebaseFirestore.instance;
+  static late ChatUser me;
 
   static get user => auth.currentUser!;
 
-  static Future<bool> userExists() async {
+  static Future<void> userExists() async {
+    await firestore
+        .collection('users')
+        .doc(user.uid)
+        .get()
+        .then((userDoc) async {
+      if (userDoc.exists) {
+        me = ChatUser.fromJson(userDoc.data()!);
+      } else {
+        await creatUser().then((value) => getSelfInfo());
+      }
+    });
+  }
+
+  static Future<bool> getSelfInfo() async {
     return (await firestore
         .collection('users')
-        .doc(user
-        .uid).get())
+        .doc(user.uid)
+        .get())
         .exists;
   }
 
@@ -33,15 +48,9 @@ class APIs {
         email: user.email ?? '',
         about: 'Feeling Happy',
         image: user.photoURL ?? '',
-        createdAt: DateTime
-            .now()
-            .millisecondsSinceEpoch
-            .toString(),
+        createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
         isOnline: true,
-        lastActive: DateTime
-            .now()
-            .millisecondsSinceEpoch
-            .toString(),
+        lastActive: DateTime.now().millisecondsSinceEpoch.toString(),
         pushToken: '',
       );
 
@@ -52,5 +61,12 @@ class APIs {
       print("🔥 Error creating user: $e");
       return false;
     }
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUser() {
+    return firestore
+        .collection('users')
+        .where('id', isNotEqualTo: user.uid)
+        .snapshots();
   }
 }
