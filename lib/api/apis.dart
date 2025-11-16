@@ -7,63 +7,50 @@ class APIs {
   static FirebaseFirestore firestore = FirebaseFirestore.instance;
   static late ChatUser me;
 
-  static get user => auth.currentUser!;
+  static User get user => auth.currentUser!;
 
+  // 🟢 Check if user exists, otherwise create
   static Future<void> userExists() async {
-    await firestore
-        .collection('users')
-        .doc(user.uid)
-        .get()
-        .then((userDoc) async {
-      if (userDoc.exists) {
-        me = ChatUser.fromJson(userDoc.data()!);
-      } else {
-        await creatUser().then((value) => getSelfInfo());
-      }
-    });
-  }
+    final userDoc = await firestore.collection('users').doc(user.uid).get();
 
-  static Future<bool> getSelfInfo() async {
-    return (await firestore
-        .collection('users')
-        .doc(user.uid)
-        .get())
-        .exists;
-  }
-
-  static Future<bool> creatUser() async {
-    try {
-      final user = auth.currentUser!;
-      final userDoc = firestore.collection('users').doc(user.uid);
-
-      // ✅ If already exists, don’t recreate
-      if ((await userDoc.get()).exists) {
-        print("ℹ️ User already exists — skipping creation.");
-        return true;
-      }
-
-      final chatUser = ChatUser(
-        id: user.uid,
-        name: user.displayName ?? '',
-        email: user.email ?? '',
-        about: 'Feeling Happy',
-        image: user.photoURL ?? '',
-        createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
-        isOnline: true,
-        lastActive: DateTime.now().millisecondsSinceEpoch.toString(),
-        pushToken: '',
-      );
-
-      await userDoc.set(chatUser.toJson());
-      print("✅ User created successfully!");
-      return true;
-    } catch (e) {
-      print("🔥 Error creating user: $e");
-      return false;
+    if (userDoc.exists) {
+      me = ChatUser.fromJson(userDoc.data()!);
+    } else {
+      await createUser();
+      await getSelfInfo();
     }
   }
 
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUser() {
+  // 🟢 Get self info (returns true if user exists)
+  static Future<bool> getSelfInfo() async {
+    final doc = await firestore.collection('users').doc(user.uid).get();
+    if (doc.exists) {
+      me = ChatUser.fromJson(doc.data()!);
+      return true;
+    }
+    return false;
+  }
+
+  // 🟢 Create user in Firestore
+  static Future<void> createUser() async {
+    final user = auth.currentUser!;
+    final chatUser = ChatUser(
+      id: user.uid,
+      name: user.displayName ?? '',
+      email: user.email ?? '',
+      about: 'Feeling Happy',
+      image: user.photoURL ?? '',
+      createdAt: DateTime.now().millisecondsSinceEpoch.toString(),
+      isOnline: true,
+      lastActive: DateTime.now().millisecondsSinceEpoch.toString(),
+      pushToken: '',
+    );
+
+    await firestore.collection('users').doc(user.uid).set(chatUser.toJson());
+  }
+
+  // 🟢 Get all users except the current one
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsers() {
     return firestore
         .collection('users')
         .where('id', isNotEqualTo: user.uid)

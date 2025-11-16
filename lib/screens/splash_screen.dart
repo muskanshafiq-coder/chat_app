@@ -18,18 +18,21 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 1500), () {
-      if(APIs.auth.currentUser != null ){
-        log('\nUser: ${APIs.auth.currentUser}');
+      if (APIs.auth.currentUser != null) {
+        log('User: ${APIs.auth.currentUser}');
         Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const HomeScreen()));
-            } else{
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } else {
         Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()));
-        }
-        });
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     mq = MediaQuery.of(context).size;

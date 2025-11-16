@@ -18,23 +18,26 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ChatUser> list = [];
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    APIs.getSelfInfo();
+    _loadUserInfo();
   }
+
+  Future<void> _loadUserInfo() async {
+    await APIs.userExists();
+    setState(() {}); // Refresh UI once user info is loaded
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const Icon(CupertinoIcons.home),
+        leading: const Icon(CupertinoIcons.home, color: Colors.black),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
         shape: const Border(
-          bottom: BorderSide(
-            color: Colors.grey,
-            width: 1,
-          ),
+          bottom: BorderSide(color: Colors.grey, width: 1),
         ),
         title: const Text(
           'We Chat',
@@ -43,14 +46,24 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, color: Colors.black),
           ),
           IconButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder:  (_) => ProfileScreen(user: list[0])));
-
+              if (list.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(user: list[0]),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No user data available!')),
+                );
+              }
             },
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert, color: Colors.black),
           ),
         ],
       ),
@@ -60,14 +73,14 @@ class _HomeScreenState extends State<HomeScreen> {
         child: FloatingActionButton(
           backgroundColor: Colors.redAccent,
           onPressed: () async {
-            await _logout(context); // CALLS the private _logout method below
+            await _logout(context);
           },
           child: const Icon(Icons.logout),
         ),
       ),
 
-      body: StreamBuilder(
-        stream: APIs.getAllUser(),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: APIs.getAllUsers(),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
@@ -81,8 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
               }
 
               final data = snapshot.data?.docs;
-              list =
-                  data?.map((e) => ChatUser.fromJson(e.data())).toList() ?? [];
+              list = data?.map((e) => ChatUser.fromJson(e.data())).toList() ?? [];
 
               if (list.isNotEmpty) {
                 return ListView.builder(
@@ -107,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ---- Logout function (private) ----
+  // ---- Logout function ----
   Future<void> _logout(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -131,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         await APIs.auth.signOut();
 
-        // Disconnect Google SignIn if needed to avoid automatic re-login:
+        // Disconnect Google Sign-In to avoid auto-login
         final googleSignIn = GoogleSignIn();
         if (await googleSignIn.isSignedIn()) {
           await googleSignIn.disconnect();
@@ -142,11 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
+            (route) => false,
           );
         }
       } catch (e) {
-        // show error and print to console
         debugPrint('Logout error: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -157,5 +168,3 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 }
-
-
