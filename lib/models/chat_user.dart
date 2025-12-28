@@ -1,13 +1,13 @@
 class ChatUser {
-  final String image;
-  final String about;
-  final String name;
-  final String createdAt;
-  final bool isOnline;
-  final String id;
-  final String lastActive;
-  final String pushToken;
-  final String email;
+  late String image;
+  late String about;
+  late String name;
+  late String createdAt;
+  late bool isOnline;
+  late String id;
+  late String lastActive;
+  late String pushToken;
+  late String email;
 
   ChatUser({
     required this.image,
